@@ -6,11 +6,17 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:16:55 by analexan          #+#    #+#             */
-/*   Updated: 2023/09/22 17:39:53 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/05 19:05:24 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
+
+void	error(int n)
+{
+	printf("Error: %i\n", n);
+	exit(EXIT_FAILURE);
+}
 
 	// querias(ac, av);
 void	querias(int ac, char **av)
@@ -18,7 +24,7 @@ void	querias(int ac, char **av)
 	char	str[100];
 
 	if (ac == 5)
-		snprintf(str, sizeof(str), "< %s %s | %s > %s", 
+		snprintf(str, sizeof(str), "< %s %s | %s > %s",
 			av[1], av[2], av[3], av[4]);
 	else
 	{
@@ -32,64 +38,72 @@ void	querias(int ac, char **av)
 	}
 	system(str);
 }
-void	parent_process(int f2, char *cmd2)
+
+void	parent_process(int f2, char *cmd2, int *end, char **envp)
 {
-	int status;
+	char	str[50];
+	int		status;
 
 	waitpid(-1, &status, 0);
-	// dup2(f2, ...); // f2 is the stdout
-	// dup2(end[0], ...); // end[0] is the stdin
-	// close(end[1])
-	// close(f2);
-	// execve function for each possible path
+	dup2(f2, STDOUT_FILENO);
+	dup2(end[0], STDIN_FILENO);
+	close(end[1]);
+	close(f2);
+	snprintf(str, sizeof(str), "/usr/bin/%s", cmd2);
+	execve(str, (char *const []){"-l", NULL }, envp);
 	exit(EXIT_FAILURE);
 }
+	// execve function for each possible path
 
-void	child_process(int f1, char *cmd1)
-{
 	// add protection if dup2() < 0
-	// dup2 close stdin, f1 becomes the new stdin
-	dup2(f1, STDIN_FILENO); // we want f1 to be execve() input
-	// dup2(end[1], STDOUT_FILENO); // we want end[1] to be execve() stdout
-	// close(end[0]) 
-	/* always close the end of the pipe you don't use,
-						as long as the pipe is open, the other end will 
-						be waiting for some kind of input and will not
-						be able to finish its process */
-	// close(f1);
-	// execve function for each possible path
+void	child_process(int f1, char *cmd1, int *end, char **envp)
+{
+	char	str[50];
+
+	dup2(f1, STDIN_FILENO);
+	dup2(end[1], STDOUT_FILENO);
+	close(end[0]);
+	close(f1);
+	snprintf(str, sizeof(str), "/usr/bin/%s", cmd1);
+	execve(str, (char *const []){"-e", NULL }, envp);
 	exit(EXIT_FAILURE);
 }
-void    pipex(int f1, int f2, char **cmd, char **envp)
+	// execve function for each possible path
+
+void	pipex(int f1, int f2, char **cmd, char **envp)
 {
-	int   end[2];
-	pid_t parent;
+	int		end[2];
+	pid_t	parent;
+
+	(void)envp;
 	pipe(end);
 	parent = fork();
 	if (parent < 0)
-			return (perror("Fork: "));
-	if (!parent) // if fork() returns 0, we are in the child process
-		child_process(f1, cmd[1]);
+		return (perror("Fork: "));
+	if (!parent)
+		child_process(f1, cmd[2], end, envp);
 	else
-		parent_process(f2, cmd[2]);
+		parent_process(f2, cmd[3], end, envp);
 }
 
 // char **ep = environment pointer
 int	main(int ac, char **av, char **envp)
 {
-	ac = 5;
-	av[1] = "infile"; // file1
-	av[2] = "ls -l"; // cmd1
-	av[3] = "wc -l"; // cmd2
-	av[4] = "outfile"; // file2
+	int	f1;
+	int	f2;
 
-	
-	// int	f1;
-	// int	f2;
-	// f1 = open(av[1], O_RDONLY);
-	// f2 = open(av[4], O_CREAT | O_RDWR | O_TRUNC, 0644);
-	// if (f1 < 0 || f2 < 0)
-	// 	return (-1);
-	// pipex(f1, f2, av, envp);
+	if (ac < 5)
+		return (1);
+	f1 = open(av[1], O_RDONLY);
+	f2 = open(av[4], O_CREAT | O_RDWR | O_TRUNC, 0644);
+	if (f1 < 0 || f2 < 0)
+		return (1);
+	pipex(f1, f2, av, envp);
 	return (0);
 }
+	// ac = 5;
+	// av[2] = "cat"; // cmd1
+	// av[1] = "infile"; // file1
+	// av[2] = "ls -l"; // cmd1
+	// av[3] = "wc -l"; // cmd2
+	// av[4] = "outfile"; // file2
