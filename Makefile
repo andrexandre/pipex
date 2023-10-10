@@ -13,7 +13,7 @@ RM		=	rm -f
 
 all:	$(NAME)
 
-$(NAME):	$(OBJ) $(INCLUDE)
+$(NAME):	$(OBJ)
 	@cc $(OBJ) -o $(NAME)
 	@mv *.o objs
 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
@@ -36,8 +36,29 @@ re:	fclean all
 run: ${NAME}
 	@./${NAME}
 
-val:	${NAME}
-	@valgrind ./${NAME}
+t	:= 1
+
+test: ${NAME}
+	./${NAME} infile cat "wc -c" outfile
+	@sleep ${t}
+	./${NAME} infile cat wc outfile
+	@sleep ${t}
+	./${NAME} infile notcat wc outfile
+	@sleep ${t}
+	./${NAME} infile cat notwc outfile
+
+testt:
+	< infile cat | wc -c > outfile
+	@sleep ${t}
+	< infile cat | wc > outfile
+	@sleep ${t}
+	< infile notcat | wc > outfile
+	@sleep ${t}
+	< infile cat | notwc > outfile
+
+# make it so the errors are the same :)
+# val:	${NAME}
+# 	@valgrind ./${NAME}
 
 e: fclean
 

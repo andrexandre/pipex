@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:17:18 by analexan          #+#    #+#             */
-/*   Updated: 2023/09/22 13:55:25 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/10 19:21:50 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,4 +24,29 @@
 # include <sys/wait.h>
 // flags:
 # include <fcntl.h>
+// va_args
+# include <stdarg.h>
+
+typedef struct s_vars
+{
+	char	**cmdargs2;
+	char	**cmdargs3;
+	char	**ep;
+	int		end[2];
+}			t_vars;
+
+// ft_split
+char	**ft_split(char const *s, char c);
+void	*free_strs(char **strs);
+
+// tool_lib
+void	prt(char *string, ...);
+char	*ft_substr(char const *s, unsigned int start, size_t len);
+char	*ft_strjoin(char const *s1, char const *s2);
+
+// tool_lib2
+size_t	ft_strlen(char const *s);
+char	*ft_strnstr(const char *big, const char *little, size_t len);
+t_vars	*vars(void);
+
 #endif
