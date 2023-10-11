@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:16:55 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/10 19:21:46 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/11 13:23:22 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,20 @@ void	error(int n)
 		prt("usage: ./pipex <file1> <cmd1> <cmd2> <file2>\n");
 	else if (n == 1)
 		prt("PATH not found\n");
-	else if (n == 2)
-		perror("pipex");
 	else
-		prt("Error: %i\n", n);
+	{
+		free_strs(vars()->paths);
+		free_strs(vars()->cmdargs2);
+		free_strs(vars()->cmdargs3);
+	}
+	if (n == 2)
+		perror("pipex");
+	else if (n == 3)
+		exit(127);
 	exit(EXIT_FAILURE);
 }
 
-void	process(char **cmdargs, char **paths, char **av, int mode)
+void	process(char **cmdargs, char **av, char **ep, int mode)
 {
 	char	*cmd;
 	int		i;
@@ -43,26 +49,27 @@ void	process(char **cmdargs, char **paths, char **av, int mode)
 		error(2);
 	close(vars()->end[mode]);
 	close(fd);
-	while (paths[++i])
+	while (vars()->paths[++i])
 	{
-		cmd = ft_strjoin(paths[i], cmdargs[0]);
-		if (!access(paths[i], F_OK | X_OK))
-			execve(cmd, cmdargs, vars()->ep);
+		cmd = ft_strjoin(vars()->paths[i], cmdargs[0]);
+		if (!access(vars()->paths[i], F_OK | X_OK))
+			execve(cmd, cmdargs, ep);
 		free(cmd);
 	}
 	perror(cmdargs[0]);
-	exit(127);
+	error(3);
 }
 // execve("/usr/bin/ls", {"ls", "-l", NULL}, {"PATH=/usr/bin", NULL});
 
-char	**parsing(char **av, char **ep)
+// temp2 is only for norm error
+void	parsing(char **ep)
 {
-	char	**paths;
 	char	*path_from_ep;
+	char	*temp;
+	char	**temp2;
 	int		i;
 
 	i = -1;
-	paths = NULL;
 	while (ep[++i])
 	{
 		path_from_ep = ft_strnstr(ep[i], "PATH=/nfs", ft_strlen(ep[i]));
@@ -72,38 +79,38 @@ char	**parsing(char **av, char **ep)
 	if (!ep[i])
 		error(1);
 	path_from_ep += 5;
-	paths = ft_split(path_from_ep, ':');
+	vars()->paths = ft_split(path_from_ep, ':');
 	i = -1;
-	while (paths[++i])
-		paths[i] = ft_strjoin(paths[i], "/");
-	vars()->cmdargs2 = ft_split(av[2], ' ');
-	vars()->cmdargs3 = ft_split(av[3], ' ');
-	vars()->ep = ep;
-	return (paths);
+	while (vars()->paths[++i])
+	{
+		temp = vars()->paths[i];
+		temp2 = &vars()->paths[i];
+		*temp2 = ft_strjoin(temp, "/");
+		free(temp);
+	}
 }
 
 // char **ep = environment pointer
 int	main(int ac, char **av, char **ep)
 {
 	pid_t	parent;
-	char	**paths;
 
 	if (ac != 5)
 		error(0);
-	paths = parsing(av, ep);
-	pipe(vars()->end);
+	parsing(ep);
+	vars()->cmdargs2 = ft_split(av[2], ' ');
+	vars()->cmdargs3 = ft_split(av[3], ' ');
+	if (pipe(vars()->end) == -1)
+		error(2);
 	parent = fork();
 	if (parent < 0)
 		error(2);
 	if (!parent)
-		process(vars()->cmdargs2, paths, av, 0);
+		process(vars()->cmdargs2, av, ep, 0);
 	else
-		process(vars()->cmdargs3, paths, av, 1);
+		process(vars()->cmdargs3, av, ep, 1);
 	return (0);
 }
-	// free_strs(vars()->paths);
-	// free_strs(vars()->cmdargs2);
-	// free_strs(vars()->cmdargs3);
 /*
 		// int a = -1;
 		// while (cmdargs[++a])
@@ -124,14 +131,6 @@ int	main(int ac, char **av, char **ep)
 // 		snprintf(str, sizeof(str), "< %s %s | %s > %s",
 // 			av[1], av[2], av[3], av[4]);
 // 	else
-// 	{
-// 		str[0] = 'e';
-// 		str[1] = 'c';
-// 		str[2] = 'h';
-// 		str[3] = 'o';
-// 		str[4] = ' ';
-// 		str[5] = 'n';
-// 		str[6] = 'o';
-// 	}
+// 		exit(EXIT_FAILURE);
 // 	system(str);
 // }

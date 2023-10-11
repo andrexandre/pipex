@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/30 17:16:37 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/09 18:02:55 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/11 13:33:25 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,8 @@ size_t	ft_strlen(char const *s)
 	return (i);
 }
 
+// searches in the string big for little and returns the a pointer to 
+// the first character of little in the string big else returns NULL
 char	*ft_strnstr(const char *big, const char *little, size_t len)
 {
 	unsigned int	i;
@@ -46,6 +48,7 @@ char	*ft_strnstr(const char *big, const char *little, size_t len)
 	return (0);
 }
 
+// this function is a global var without norm error
 t_vars	*vars(void)
 {
 	static t_vars	vars;

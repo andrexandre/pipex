@@ -5,25 +5,28 @@ YELLOW	= \033[1;33m
 BLUE	= \033[1;34m
 CYAN 	= \033[1;36m
 
-NAME	=	pipex
+SRCDIR  = .
+OBJDIR  = objs
+SRC = $(wildcard $(SRCDIR)/*.c)
+OBJ = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC))
 
-SRC		= $(wildcard *.c)
-OBJ		= $(SRC:.c=.o)
-RM		=	rm -f
+RM		= rm -f
+NAME	= pipex
 
 all:	$(NAME)
 
-$(NAME):	$(OBJ)
-	@cc $(OBJ) -o $(NAME)
-	@mv *.o objs
+$(NAME): $(OBJ)
+	@cc $^ -o $@
 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
 
-%.o : %.c
-	@mkdir -p objs
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	@cc -Wall -Wextra -Werror -c $< -o $@
 
+$(OBJDIR):
+	@mkdir -p $(OBJDIR)
+
 clean:
-	@$(RM) objs/$(OBJ)
+	@$(RM) $(OBJDIR)/*.o
 	@echo "Stuff removed 🗑️"
 
 fclean:	clean
@@ -62,4 +65,4 @@ testt:
 
 e: fclean
 
-.PHONY:	all clean fclean re
+.PHONY:	all clean fclean re run test testt

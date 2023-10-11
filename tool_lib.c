@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/30 17:16:37 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/09 16:37:20 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/11 13:33:42 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ void	ps(char *str, int mode)
 		write(1, &str, 1);
 }
 
+// custom printf
 void	prt(char *string, ...)
 {
 	va_list	args;
@@ -69,6 +70,7 @@ void	prt(char *string, ...)
 	va_end(args);
 }
 
+// returns a section of the string s starting in start only until len characters
 char	*ft_substr(char const *s, unsigned int start, size_t len)
 {
 	char			*str;
@@ -97,6 +99,7 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 	return (str);
 }
 
+// returns the concatenation of the string s1 with s2
 char	*ft_strjoin(char const *s1, char const *s2)
 {
 	int		i;
