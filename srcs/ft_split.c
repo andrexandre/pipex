@@ -6,11 +6,11 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/09 11:05:24 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/09 18:11:28 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/11 16:21:39 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "pipex.h"
+#include "../pipex.h"
 
 void	*free_strs(char **strs)
 {

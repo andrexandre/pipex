@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:17:18 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/11 13:16:51 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/11 18:50:50 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,13 +27,20 @@
 // va_args
 # include <stdarg.h>
 
+// mandatory
 typedef struct s_vars
 {
 	char	**cmdargs2;
 	char	**cmdargs3;
-	char	**paths;
 	int		end[2];
+	char	**paths;
+
+	char	***cmdargs;
+	int		**pipe;
+	int		ac;
+	pid_t	*pids;
 }			t_vars;
+// bonus
 
 // ft_split
 char	**ft_split(char const *s, char c);
@@ -48,5 +55,6 @@ char	*ft_strjoin(char const *s1, char const *s2);
 size_t	ft_strlen(char const *s);
 char	*ft_strnstr(const char *big, const char *little, size_t len);
 t_vars	*vars(void);
+void	*ft_calloc(size_t nmemb, size_t size);
 
 #endif

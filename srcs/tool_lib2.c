@@ -6,11 +6,11 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/30 17:16:37 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/11 13:33:25 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/11 17:50:06 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "pipex.h"
+#include "../pipex.h"
 
 size_t	ft_strlen(char const *s)
 {
@@ -54,4 +54,29 @@ t_vars	*vars(void)
 	static t_vars	vars;
 
 	return (&vars);
+}
+
+void	ft_bzero(void *s, size_t n)
+{
+	unsigned int	i;
+	char			*ptr;
+
+	i = 0;
+	ptr = (char *)s;
+	while (i < n)
+	{
+		ptr[i] = 0;
+		i++;
+	}
+}
+
+void	*ft_calloc(size_t nmemb, size_t size)
+{
+	void	*arr;
+
+	arr = malloc(nmemb * size);
+	if (!arr)
+		return (NULL);
+	ft_bzero(arr, nmemb * size);
+	return (arr);
 }

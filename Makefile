@@ -5,17 +5,20 @@ YELLOW	= \033[1;33m
 BLUE	= \033[1;34m
 CYAN 	= \033[1;36m
 
-SRCDIR  = .
-OBJDIR  = objs
-SRC = $(wildcard $(SRCDIR)/*.c)
-OBJ = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC))
-
 RM		= rm -f
 NAME	= pipex
 
+SRCDIR	= srcs
+OBJDIR	= objs
+SRC		= $(wildcard $(SRCDIR)/*.c) $(NAME).c
+OBJ		= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC))
+BSRC	= $(wildcard $(SRCDIR)/*.c) $(NAME)_bonus.c
+BOBJ	= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(BSRC))
+
 all:	$(NAME)
 
-$(NAME): $(OBJ)
+# $(NAME): $(OBJ)
+$(NAME): $(BOBJ)
 	@cc $^ -o $@
 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
 
@@ -24,6 +27,10 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
+
+# bonus: $(BOBJ)
+# 	@cc $^ -o $(NAME)
+# 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
 
 clean:
 	@$(RM) $(OBJDIR)/*.o

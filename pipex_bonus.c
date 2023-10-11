@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.c                                            :+:      :+:    :+:   */
+/*   pipex_bonus.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:16:55 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/11 17:08:26 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/11 19:03:49 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 void	error(int n)
 {
+	int	i;
+
 	if (!n)
 		prt("usage: ./pipex <file1> <cmd1> <cmd2> <file2>\n");
 	else if (n == 1)
@@ -21,8 +23,16 @@ void	error(int n)
 	else
 	{
 		free_strs(vars()->paths);
-		free_strs(vars()->cmdargs2);
-		free_strs(vars()->cmdargs3);
+		i = -1;
+		while (++i < vars()->ac - 3)
+			free_strs(vars()->cmdargs[i]);
+		free(vars()->cmdargs);
+		i = -1;
+		while (++i < vars()->ac - 4)
+			free(vars()->pipe[i]);
+		free(vars()->pipe);
+		free(vars()->pids);
+		// free all pids
 	}
 	if (n == 2)
 		perror("pipex");
@@ -35,6 +45,7 @@ void	process(char **cmdargs, char **av, char **ep, int mode)
 {
 	char	*cmd;
 	int		i;
+	int		status;
 	int		fd;
 
 	wait(&i);
@@ -45,9 +56,9 @@ void	process(char **cmdargs, char **av, char **ep, int mode)
 	if (fd < 0)
 		error(2);
 	i = -1;
-	if (dup2(fd, mode) < 0 || dup2(vars()->end[!mode], !mode) < 0)
+	if (dup2(fd, mode) < 0 || dup2(vars()->pipe[0][!mode], !mode) < 0)
 		error(2);
-	close(vars()->end[mode]);
+	close(vars()->pipe[0][mode]);
 	close(fd);
 	while (vars()->paths[++i])
 	{
@@ -58,6 +69,26 @@ void	process(char **cmdargs, char **av, char **ep, int mode)
 	}
 	perror(cmdargs[0]);
 	error(3);
+}
+// execve("/usr/bin/ls", {"ls", "-l", NULL}, {"PATH=/usr/bin", NULL});
+
+void	fill_args_n_pipe(int ac, char **av)
+{
+	int	i;
+
+	vars()->cmdargs = ft_calloc(ac - 2, sizeof(char *));
+	vars()->cmdargs[ac - 3] = NULL;
+	i = -1;
+	while (++i < ac - 3)
+		vars()->cmdargs[i] = ft_split(av[i + 2], ' ');
+	vars()->pipe = ft_calloc(ac - 4, sizeof(int *));
+	i = -1;
+	while (++i < ac - 4)
+	{
+		vars()->pipe[i] = ft_calloc(2, sizeof(int));
+		if (pipe(vars()->pipe[i]) == -1)
+			error(2);
+	}
 }
 
 // temp2 is only for norm error
@@ -89,23 +120,26 @@ void	parsing(char **ep)
 	}
 }
 
+// in this moment make all is make bonus
 int	main(int ac, char **av, char **ep)
 {
-	pid_t	parent;
-
-	if (ac != 5)
+	if (ac < 5)
 		error(0);
+	vars()->ac = ac;
 	parsing(ep);
-	vars()->cmdargs2 = ft_split(av[2], ' ');
-	vars()->cmdargs3 = ft_split(av[3], ' ');
-	if (pipe(vars()->end) == -1)
+	fill_args_n_pipe(ac, av);
+	vars()->pids = ft_calloc(ac - 4, sizeof(int *));
+	vars()->pids[0] = fork();
+	if (vars()->pids[0] < 0)
 		error(2);
-	parent = fork();
-	if (parent < 0)
-		error(2);
-	if (!parent)
-		process(vars()->cmdargs2, av, ep, 0);
+	if (!vars()->pids[0])
+		process(vars()->cmdargs[0], av, ep, 0);
 	else
-		process(vars()->cmdargs3, av, ep, 1);
+		process(vars()->cmdargs[1], av, ep, 1);
 	return (0);
 }
+/*
+		// int a = -1;
+		// while (cmdargs[++a])
+		// 	prt("'%s'\n", cmdargs[a]);
+*/
