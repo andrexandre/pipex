@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:17:18 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/11 18:50:50 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/12 17:45:00 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,5 +56,9 @@ size_t	ft_strlen(char const *s);
 char	*ft_strnstr(const char *big, const char *little, size_t len);
 t_vars	*vars(void);
 void	*ft_calloc(size_t nmemb, size_t size);
+char	*ft_strchr(const char *s, int c);
+
+// tool_lib3
+char	*ft_strdup(const char *s);
 
 #endif

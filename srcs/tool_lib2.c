@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/30 17:16:37 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/11 17:50:06 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/12 17:42:16 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,27 +56,34 @@ t_vars	*vars(void)
 	return (&vars);
 }
 
-void	ft_bzero(void *s, size_t n)
+void	*ft_calloc(size_t nmemb, size_t size)
 {
 	unsigned int	i;
 	char			*ptr;
-
-	i = 0;
-	ptr = (char *)s;
-	while (i < n)
-	{
-		ptr[i] = 0;
-		i++;
-	}
-}
-
-void	*ft_calloc(size_t nmemb, size_t size)
-{
-	void	*arr;
+	void			*arr;
 
 	arr = malloc(nmemb * size);
 	if (!arr)
 		return (NULL);
-	ft_bzero(arr, nmemb * size);
+	i = 0;
+	ptr = (char *)arr;
+	while (i < nmemb * size)
+	{
+		ptr[i] = 0;
+		i++;
+	}
 	return (arr);
+}
+
+char	*ft_strchr(const char *s, int c)
+{
+	while (*s)
+	{
+		if (*s == (char)c)
+			return ((char *)s);
+		s++;
+	}
+	if (*s == (char)c)
+		return ((char *)s);
+	return (0);
 }

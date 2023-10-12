@@ -10,15 +10,18 @@ NAME	= pipex
 
 SRCDIR	= srcs
 OBJDIR	= objs
+
+# wildcard illegal
 SRC		= $(wildcard $(SRCDIR)/*.c) $(NAME).c
 OBJ		= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC))
+
 BSRC	= $(wildcard $(SRCDIR)/*.c) $(NAME)_bonus.c
 BOBJ	= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(BSRC))
 
 all:	$(NAME)
 
-# $(NAME): $(OBJ)
-$(NAME): $(BOBJ)
+$(NAME): $(OBJ) # normal
+# $(NAME): $(BOBJ) # bonus
 	@cc $^ -o $@
 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
 
@@ -51,6 +54,8 @@ t	:= 1
 test: ${NAME}
 	./${NAME} infile cat "wc -c" outfile
 	@sleep ${t}
+	./${NAME} infile cat "grep error" wc outfile
+	@sleep ${t}
 	./${NAME} infile cat wc outfile
 	@sleep ${t}
 	./${NAME} infile notcat wc outfile
@@ -60,12 +65,13 @@ test: ${NAME}
 testt:
 	< infile cat | wc -c > outfile
 	@sleep ${t}
+	< infile cat | grep error | wc > outfile
+	@sleep ${t}
 	< infile cat | wc > outfile
 	@sleep ${t}
 	< infile notcat | wc > outfile
 	@sleep ${t}
 	< infile cat | notwc > outfile
-
 # make it so the errors are the same :)
 # val:	${NAME}
 # 	@valgrind ./${NAME}

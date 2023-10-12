@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:16:55 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/11 17:08:26 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/12 17:59:25 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,47 +31,67 @@ void	error(int n)
 	exit(EXIT_FAILURE);
 }
 
+char	*search_cmd(char **cmdargs)
+{
+	int		i;
+	char	*cmd;
+
+	i = -1;
+	if (!ft_strchr(cmdargs[0], '/'))
+	{
+		while (vars()->paths[++i])
+		{
+			cmd = ft_strjoin(vars()->paths[i], cmdargs[0]);
+			if (!access(cmd, F_OK | X_OK))
+				return (cmd);
+			free(cmd);
+		}
+	}
+	else
+		if (!access(cmdargs[0], F_OK | X_OK))
+			return (ft_strdup(cmdargs[0]));
+	return (NULL);
+}
+
 void	process(char **cmdargs, char **av, char **ep, int mode)
 {
 	char	*cmd;
-	int		i;
 	int		fd;
+	int		dup_fd[2];
 
-	wait(&i);
 	if (!mode)
 		fd = open(av[1], O_RDONLY);
 	else
 		fd = open(av[4], O_CREAT | O_WRONLY | O_TRUNC, 0644);
 	if (fd < 0)
 		error(2);
-	i = -1;
-	if (dup2(fd, mode) < 0 || dup2(vars()->end[!mode], !mode) < 0)
+	dup_fd[0] = dup2(fd, mode);
+	dup_fd[1] = dup2(vars()->end[!mode], !mode);
+	if (dup_fd[0] < 0 || dup_fd[1] < 0)
 		error(2);
-	close(vars()->end[mode]);
+	close(vars()->end[1]);
+	close(vars()->end[0]);
 	close(fd);
-	while (vars()->paths[++i])
-	{
-		cmd = ft_strjoin(vars()->paths[i], cmdargs[0]);
-		if (!access(vars()->paths[i], F_OK | X_OK))
-			execve(cmd, cmdargs, ep);
-		free(cmd);
-	}
+	cmd = search_cmd(cmdargs);
+	if (cmd)
+		execve(cmd, cmdargs, ep);
+	free(cmd);
+	close(dup_fd[0]);
+	close(dup_fd[1]);
 	perror(cmdargs[0]);
 	error(3);
 }
 
-// temp2 is only for norm error
 void	parsing(char **ep)
 {
 	char	*path_from_ep;
 	char	*temp;
-	char	**temp2;
 	int		i;
 
 	i = -1;
 	while (ep[++i])
 	{
-		path_from_ep = ft_strnstr(ep[i], "PATH=/nfs", ft_strlen(ep[i]));
+		path_from_ep = ft_strnstr(ep[i], "PATH=", 5);
 		if (path_from_ep)
 			break ;
 	}
@@ -83,15 +103,16 @@ void	parsing(char **ep)
 	while (vars()->paths[++i])
 	{
 		temp = vars()->paths[i];
-		temp2 = &vars()->paths[i];
-		*temp2 = ft_strjoin(temp, "/");
+		(vars()->paths[i]) = ft_strjoin(temp, "/");
 		free(temp);
 	}
 }
 
+// to-do: fix leaks, etc...
 int	main(int ac, char **av, char **ep)
 {
-	pid_t	parent;
+	pid_t	child2;
+	pid_t	child1;
 
 	if (ac != 5)
 		error(0);
@@ -100,12 +121,19 @@ int	main(int ac, char **av, char **ep)
 	vars()->cmdargs3 = ft_split(av[3], ' ');
 	if (pipe(vars()->end) == -1)
 		error(2);
-	parent = fork();
-	if (parent < 0)
+	child1 = fork();
+	if (child1 < 0)
 		error(2);
-	if (!parent)
+	if (!child1)
 		process(vars()->cmdargs2, av, ep, 0);
-	else
+	child2 = fork();
+	if (child2 < 0)
+		error(2);
+	if (!child2)
 		process(vars()->cmdargs3, av, ep, 1);
+	close(vars()->end[0]);
+	close(vars()->end[1]);
+	waitpid(child1, NULL, 0);
+	waitpid(child2, NULL, 0);
 	return (0);
 }
