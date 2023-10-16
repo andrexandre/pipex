@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:16:55 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/12 17:59:25 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/16 17:47:41 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,19 +76,15 @@ void	process(char **cmdargs, char **av, char **ep, int mode)
 	if (cmd)
 		execve(cmd, cmdargs, ep);
 	free(cmd);
-	close(dup_fd[0]);
-	close(dup_fd[1]);
 	perror(cmdargs[0]);
 	error(3);
 }
 
-void	parsing(char **ep)
+void	parsing(char **ep, char **av, int i)
 {
 	char	*path_from_ep;
 	char	*temp;
-	int		i;
 
-	i = -1;
 	while (ep[++i])
 	{
 		path_from_ep = ft_strnstr(ep[i], "PATH=", 5);
@@ -106,21 +102,26 @@ void	parsing(char **ep)
 		(vars()->paths[i]) = ft_strjoin(temp, "/");
 		free(temp);
 	}
-}
-
-// to-do: fix leaks, etc...
-int	main(int ac, char **av, char **ep)
-{
-	pid_t	child2;
-	pid_t	child1;
-
-	if (ac != 5)
-		error(0);
-	parsing(ep);
 	vars()->cmdargs2 = ft_split(av[2], ' ');
 	vars()->cmdargs3 = ft_split(av[3], ' ');
 	if (pipe(vars()->end) == -1)
 		error(2);
+}
+/*
+make && valgrind --track-fds=yes --trace-children=yes --leak-check=full
+ --show-leak-kinds=all 
+./pipex infile cat cat outfile
+< infile cat | cat > outfile
+*/
+
+int	main(int ac, char **av, char **ep)
+{
+	pid_t	child1;
+	pid_t	child2;
+
+	if (ac != 5)
+		error(0);
+	parsing(ep, av, -1);
 	child1 = fork();
 	if (child1 < 0)
 		error(2);
@@ -133,6 +134,9 @@ int	main(int ac, char **av, char **ep)
 		process(vars()->cmdargs3, av, ep, 1);
 	close(vars()->end[0]);
 	close(vars()->end[1]);
+	free_strs(vars()->paths);
+	free_strs(vars()->cmdargs2);
+	free_strs(vars()->cmdargs3);
 	waitpid(child1, NULL, 0);
 	waitpid(child2, NULL, 0);
 	return (0);

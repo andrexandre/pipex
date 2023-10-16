@@ -20,8 +20,8 @@ BOBJ	= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(BSRC))
 
 all:	$(NAME)
 
-$(NAME): $(OBJ) # normal
-# $(NAME): $(BOBJ) # bonus
+# $(NAME): $(OBJ) # normal
+$(NAME): $(BOBJ) # bonus
 	@cc $^ -o $@
 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
 

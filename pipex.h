@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:17:18 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/12 17:45:00 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/16 19:01:31 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ typedef struct s_vars
 	char	***cmdargs;
 	int		**pipe;
 	int		ac;
+	int		fd1;
+	int		fd2;
 	pid_t	*pids;
 }			t_vars;
 // bonus
