@@ -12,9 +12,11 @@ SRCDIR	= srcs
 OBJDIR	= objs
 
 # wildcard illegal
+# SRC		= ft_split.c  pipex_utils.c  tool_lib2.c  tool_lib3.c  tool_lib.c $(NAME).c
 SRC		= $(wildcard $(SRCDIR)/*.c) $(NAME).c
 OBJ		= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC))
 
+# BSRC	= ft_split.c  pipex_utils.c  tool_lib2.c  tool_lib3.c  tool_lib.c $(NAME)_bonus.c
 BSRC	= $(wildcard $(SRCDIR)/*.c) $(NAME)_bonus.c
 BOBJ	= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(BSRC))
 
@@ -72,9 +74,20 @@ testt:
 	< infile notcat | wc > outfile
 	@sleep ${t}
 	< infile cat | notwc > outfile
-# make it so the errors are the same :)
-# val:	${NAME}
-# 	@valgrind ./${NAME}
+
+tes:
+	@valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} infile cat wc outfile
+
+v:
+	@make re && valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} infile cat wc outfile
+
+val:	${NAME}
+	@output=$$(make re && valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} infile cat wc outfile 2>&1); \
+	if echo "$$output" | grep -q 'freed' && echo "$$output" | grep -q '0 errors' ; then\
+		echo -n "$(GREEN)"; echo "$$output" | grep -E 'freed|total|ERROR S|file descriptor' | sed 's/^[^ ]* //';\
+	else\
+		echo -n "$(RED)"; echo "$$output" | grep -E 'total|ERROR S|file descriptor' | sed 's/^[^ ]* //';\
+	fi;
 
 e: fclean
 
