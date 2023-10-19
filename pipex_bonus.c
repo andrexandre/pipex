@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:16:55 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/18 19:22:15 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/19 20:24:08 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,12 +37,11 @@ char	*search_cmd(char **cmdargs, int fd, int fd2)
 	exit(127);
 }
 
-int	process(char **cmdargs, char **av, char **ep, int mode)
+void	process(char **cmdargs, char **av, char **ep, int mode)
 {
 	char	*cmd;
 	int		fd;
 	int		fd2;
-	int		i;
 
 	if (!mode)
 		fd = open(av[1], O_RDONLY);
@@ -53,16 +52,16 @@ int	process(char **cmdargs, char **av, char **ep, int mode)
 	else
 		fd2 = vars()->pipe[mode][1];
 	if (fd < 0 || fd2 < 0)
-		error(3);
+		error_b(3);
 	cmd = search_cmd(cmdargs, fd, fd2);
 	if (dup2(fd, 0) < 0 || dup2(fd2, 1) < 0)
-		error(3);
+		error_b(2);
 	close_all(fd, fd2);
 	execve(cmd, cmdargs, ep);
 	free(cmd);
 	perror(cmdargs[0]);
 	free_all(0);
-	return (127);
+	exit(127);
 }
 
 void	fill_args_n_pipe(int ac, char **av, char **ep)
@@ -80,7 +79,7 @@ void	fill_args_n_pipe(int ac, char **av, char **ep)
 	{
 		(vars()->pipe[i]) = ft_calloc(2, sizeof(int));
 		if (pipe(vars()->pipe[i]) == -1)
-			error(2);
+			error_b(1);
 	}
 	vars()->pids = ft_calloc(ac - 3, sizeof(int));
 	i = -1;
@@ -88,27 +87,26 @@ void	fill_args_n_pipe(int ac, char **av, char **ep)
 	{
 		vars()->pids[i] = fork();
 		if (vars()->pids[i] < 0)
-			error(3);
+			error_b(2);
 		if (!vars()->pids[i])
-			if (process(vars()->cmdargs[i], av, ep, i) == 127)
-				return ;
+			process(vars()->cmdargs[i], av, ep, i);
 	}
 }
-// TOO_MANY_LINES
 
-void	parsing(char **ep, char **av, int i)
+void	parsing(char **ep, int i)
 {
 	char	*path_from_ep;
 	char	*temp;
 
+	path_from_ep = NULL;
 	while (ep[++i])
 	{
 		path_from_ep = ft_strnstr(ep[i], "PATH=", 5);
 		if (path_from_ep)
 			break ;
 	}
-	if (!ep[i])
-		error(1);
+	if (!path_from_ep)
+		return ;
 	path_from_ep += 5;
 	vars()->paths = ft_split(path_from_ep, ':');
 	if (!vars()->paths)
@@ -124,16 +122,22 @@ void	parsing(char **ep, char **av, int i)
 	}
 }
 
-// to-do: bonus: here_doc
+// to-do: fix leaks when:
+// unset PATH && /bin/valgrind --track-fds=yes --trace-children=yes
+// --leak-check=full --show-leak-kinds=all -s ./pipex pipex.c pwd cat outfile
 int	main(int ac, char **av, char **ep)
 {
 	int	i;
 
 	i = -1;
-	if (ac < 5)
-		error(0);
 	vars()->ac = ac;
-	parsing(ep, av, -1);
+	vars()->av = av;
+	if (ac < 5)
+		error_b(0);
+	if (!ft_strcmp(av[1], "here_doc"))
+		here_doc(ac, av);
+	check_fds(ac, av);
+	parsing(ep, -1);
 	fill_args_n_pipe(ac, av, ep);
 	close_all(-1, -1);
 	i = -1;
@@ -145,11 +149,16 @@ int	main(int ac, char **av, char **ep)
 
 /*
 commands to test:
+unset PATH
+export PATH=bixo
+./pipex 123 abc comaiso tal
+./pipex "" "" "" ""
+
 ./pipex infile "ping google.com -c 5" "wc -c" outfile
 ./pipex cat cat outfile
 ./pipex 0 cat cat outfile
 ./pipex "NULL" cat cat outfile
-unset PWD
+unset PWD || PATH
 ./pipex pipex.c pwd cat outfile
 ./pipex pipex.c "echo $PWD" cat outfile
 ./pipex pipex.c "echo $OLDPWD" cat outfile

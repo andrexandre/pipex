@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:17:18 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/18 19:09:51 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/19 19:53:24 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,29 +27,39 @@
 // va_args
 # include <stdarg.h>
 
-// mandatory
+# ifndef BUFFER_SIZE
+#  define BUFFER_SIZE 5
+# endif
+
+# ifndef BUFFER_SIZE
+#  define BUFFER_SIZE 5
+# endif
+
 typedef struct s_vars
 {
-	char	**cmdargs2;
-	char	**cmdargs3;
-	int		end[2];
 	char	**paths;
-
 	char	***cmdargs;
 	int		**pipe;
 	int		ac;
+	char	**av;
 	pid_t	*pids;
 }			t_vars;
-// bonus
 
 // pipex_utils
 void	free_all(int n);
 void	close_all(int fd1, int fd2);
-void	error(int n);
+void	error_b(int n);
+void	here_doc(int ac, char **av);
+void	check_fds(int ac, char **av);
 
 // ft_split
 char	**ft_split(char const *s, char c);
 void	*free_strs(char **strs);
+
+// get_next_line
+size_t	gnl_strlen(char *s);
+void	ft_bzero(void *s, size_t n);
+char	*get_next_line(int fd);
 
 // tool_lib
 void	prt(char *string, ...);
@@ -65,5 +75,6 @@ char	*ft_strchr(const char *s, int c);
 
 // tool_lib3
 char	*ft_strdup(const char *s);
+int		ft_strcmp(char *s1, char *s2);
 
 #endif

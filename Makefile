@@ -8,6 +8,8 @@ CYAN 	= \033[1;36m
 RM		= rm -f
 NAME	= pipex
 
+CFLAGS = -Wall -Wextra -Werror -g
+
 SRCDIR	= srcs
 OBJDIR	= objs
 
@@ -22,20 +24,20 @@ BOBJ	= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(BSRC))
 
 all:	$(NAME)
 
-# $(NAME): $(OBJ) # normal
-$(NAME): $(BOBJ) # bonus
-	@cc $^ -o $@
+$(NAME): $(OBJ) # normal
+# $(NAME): $(BOBJ) # bonus
+	@cc $(CFLAGS) $^ -o $@
 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
-	@cc -Wall -Wextra -Werror -c $< -o $@
+	@cc $(CFLAGS) -c $< -o $@
 
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
-# bonus: $(BOBJ)
-# 	@cc $^ -o $(NAME)
-# 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
+bonus: $(BOBJ)
+	@cc $(CFLAGS) $^ -o $(NAME)
+	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
 
 clean:
 	@$(RM) $(OBJDIR)/*.o
@@ -53,36 +55,13 @@ run: ${NAME}
 
 t	:= 1
 
-test: ${NAME}
-	./${NAME} infile cat "wc -c" outfile
-	@sleep ${t}
-	./${NAME} infile cat "grep error" wc outfile
-	@sleep ${t}
-	./${NAME} infile cat wc outfile
-	@sleep ${t}
-	./${NAME} infile notcat wc outfile
-	@sleep ${t}
-	./${NAME} infile cat notwc outfile
-
-testt:
-	< infile cat | wc -c > outfile
-	@sleep ${t}
-	< infile cat | grep error | wc > outfile
-	@sleep ${t}
-	< infile cat | wc > outfile
-	@sleep ${t}
-	< infile notcat | wc > outfile
-	@sleep ${t}
-	< infile cat | notwc > outfile
-
-tes:
-	@valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} infile cat wc outfile
+TESTF	= infile cat wc outfile
 
 v:
-	@make re && valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} infile cat wc outfile
+	@make && valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} ${TESTF}
 
 val:	${NAME}
-	@output=$$(make re && valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} infile cat wc outfile 2>&1); \
+	@output=$$(make re && valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} ${TESTF} 2>&1); \
 	if echo "$$output" | grep -q 'freed' && echo "$$output" | grep -q '0 errors' ; then\
 		echo -n "$(GREEN)"; echo "$$output" | grep -E 'freed|total|ERROR S|file descriptor' | sed 's/^[^ ]* //';\
 	else\
@@ -91,4 +70,4 @@ val:	${NAME}
 
 e: fclean
 
-.PHONY:	all clean fclean re run test testt
+.PHONY:	all clean fclean re run test testt v val e

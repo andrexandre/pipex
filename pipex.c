@@ -6,35 +6,16 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:16:55 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/16 17:47:41 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/19 20:15:52 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	error(int n)
+char	*search_cmd(char **cmdargs, int fd, int fd2)
 {
-	if (!n)
-		prt("usage: ./pipex <file1> <cmd1> <cmd2> <file2>\n");
-	else if (n == 1)
-		prt("PATH not found\n");
-	else
-	{
-		free_strs(vars()->paths);
-		free_strs(vars()->cmdargs2);
-		free_strs(vars()->cmdargs3);
-	}
-	if (n == 2)
-		perror("pipex");
-	else if (n == 3)
-		exit(127);
-	exit(EXIT_FAILURE);
-}
-
-char	*search_cmd(char **cmdargs)
-{
-	int		i;
 	char	*cmd;
+	int		i;
 
 	i = -1;
 	if (!ft_strchr(cmdargs[0], '/'))
@@ -50,94 +31,113 @@ char	*search_cmd(char **cmdargs)
 	else
 		if (!access(cmdargs[0], F_OK | X_OK))
 			return (ft_strdup(cmdargs[0]));
-	return (NULL);
+	perror(cmdargs[0]);
+	close_all(fd, fd2);
+	free_all(0);
+	exit(127);
 }
 
 void	process(char **cmdargs, char **av, char **ep, int mode)
 {
 	char	*cmd;
 	int		fd;
-	int		dup_fd[2];
+	int		fd2;
 
 	if (!mode)
 		fd = open(av[1], O_RDONLY);
 	else
-		fd = open(av[4], O_CREAT | O_WRONLY | O_TRUNC, 0644);
-	if (fd < 0)
-		error(2);
-	dup_fd[0] = dup2(fd, mode);
-	dup_fd[1] = dup2(vars()->end[!mode], !mode);
-	if (dup_fd[0] < 0 || dup_fd[1] < 0)
-		error(2);
-	close(vars()->end[1]);
-	close(vars()->end[0]);
-	close(fd);
-	cmd = search_cmd(cmdargs);
-	if (cmd)
-		execve(cmd, cmdargs, ep);
+		fd = vars()->pipe[mode - 1][0];
+	if (mode == vars()->ac - 4)
+		fd2 = open(av[vars()->ac - 1], O_CREAT | O_WRONLY | O_TRUNC, 0644);
+	else
+		fd2 = vars()->pipe[mode][1];
+	if (fd < 0 || fd2 < 0)
+		error_b(3);
+	cmd = search_cmd(cmdargs, fd, fd2);
+	if (dup2(fd, 0) < 0 || dup2(fd2, 1) < 0)
+		error_b(2);
+	close_all(fd, fd2);
+	execve(cmd, cmdargs, ep);
 	free(cmd);
 	perror(cmdargs[0]);
-	error(3);
+	free_all(0);
+	exit(127);
 }
 
-void	parsing(char **ep, char **av, int i)
+void	fill_args_n_pipe(int ac, char **av, char **ep)
+{
+	int	i;
+
+	vars()->cmdargs = ft_calloc(ac - 2, sizeof(char *));
+	vars()->cmdargs[ac - 3] = NULL;
+	i = -1;
+	while (++i < ac - 3)
+		(vars()->cmdargs[i]) = ft_split(av[i + 2], ' ');
+	vars()->pipe = ft_calloc(ac - 4, sizeof(int *));
+	i = -1;
+	while (++i < ac - 4)
+	{
+		(vars()->pipe[i]) = ft_calloc(2, sizeof(int));
+		if (pipe(vars()->pipe[i]) == -1)
+			error_b(1);
+	}
+	vars()->pids = ft_calloc(ac - 3, sizeof(int));
+	i = -1;
+	while (++i < ac - 3)
+	{
+		vars()->pids[i] = fork();
+		if (vars()->pids[i] < 0)
+			error_b(2);
+		if (!vars()->pids[i])
+			process(vars()->cmdargs[i], av, ep, i);
+	}
+}
+
+void	parsing(char **ep, int i)
 {
 	char	*path_from_ep;
 	char	*temp;
 
+	path_from_ep = NULL;
 	while (ep[++i])
 	{
 		path_from_ep = ft_strnstr(ep[i], "PATH=", 5);
 		if (path_from_ep)
 			break ;
 	}
-	if (!ep[i])
-		error(1);
+	if (!path_from_ep)
+		return ;
 	path_from_ep += 5;
 	vars()->paths = ft_split(path_from_ep, ':');
+	if (!vars()->paths)
+		exit(EXIT_FAILURE);
 	i = -1;
 	while (vars()->paths[++i])
 	{
 		temp = vars()->paths[i];
 		(vars()->paths[i]) = ft_strjoin(temp, "/");
 		free(temp);
+		if (!vars()->paths[i])
+			exit(EXIT_FAILURE);
 	}
-	vars()->cmdargs2 = ft_split(av[2], ' ');
-	vars()->cmdargs3 = ft_split(av[3], ' ');
-	if (pipe(vars()->end) == -1)
-		error(2);
 }
-/*
-make && valgrind --track-fds=yes --trace-children=yes --leak-check=full
- --show-leak-kinds=all 
-./pipex infile cat cat outfile
-< infile cat | cat > outfile
-*/
 
 int	main(int ac, char **av, char **ep)
 {
-	pid_t	child1;
-	pid_t	child2;
+	int	i;
 
+	i = -1;
+	vars()->ac = ac;
+	vars()->av = av;
 	if (ac != 5)
-		error(0);
-	parsing(ep, av, -1);
-	child1 = fork();
-	if (child1 < 0)
-		error(2);
-	if (!child1)
-		process(vars()->cmdargs2, av, ep, 0);
-	child2 = fork();
-	if (child2 < 0)
-		error(2);
-	if (!child2)
-		process(vars()->cmdargs3, av, ep, 1);
-	close(vars()->end[0]);
-	close(vars()->end[1]);
-	free_strs(vars()->paths);
-	free_strs(vars()->cmdargs2);
-	free_strs(vars()->cmdargs3);
-	waitpid(child1, NULL, 0);
-	waitpid(child2, NULL, 0);
+		error_b(-1);
+	check_fds(ac, av);
+	parsing(ep, -1);
+	fill_args_n_pipe(ac, av, ep);
+	close_all(-1, -1);
+	i = -1;
+	while (++i < ac - 3)
+		waitpid(vars()->pids[i], NULL, 0);
+	free_all(0);
 	return (0);
 }
