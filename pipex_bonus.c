@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:16:55 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/19 20:24:08 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/20 19:03:31 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ void	process(char **cmdargs, char **av, char **ep, int mode)
 	if (fd < 0 || fd2 < 0)
 		error_b(3);
 	cmd = search_cmd(cmdargs, fd, fd2);
-	if (dup2(fd, 0) < 0 || dup2(fd2, 1) < 0)
+	if (dup2(fd, STDIN_FILENO) < 0 || dup2(fd2, STDOUT_FILENO) < 0)
 		error_b(2);
 	close_all(fd, fd2);
 	execve(cmd, cmdargs, ep);
@@ -123,20 +123,21 @@ void	parsing(char **ep, int i)
 }
 
 // to-do: fix leaks when:
+// make re && valgrind ./pipex here_doc EOF cat cat outfile
 // unset PATH && /bin/valgrind --track-fds=yes --trace-children=yes
 // --leak-check=full --show-leak-kinds=all -s ./pipex pipex.c pwd cat outfile
 int	main(int ac, char **av, char **ep)
 {
 	int	i;
 
-	i = -1;
 	vars()->ac = ac;
 	vars()->av = av;
 	if (ac < 5)
 		error_b(0);
 	if (!ft_strcmp(av[1], "here_doc"))
-		here_doc(ac, av);
-	check_fds(ac, av);
+		here_doc(ac, av, ep);
+	else
+		check_fds(ac, av);
 	parsing(ep, -1);
 	fill_args_n_pipe(ac, av, ep);
 	close_all(-1, -1);
@@ -147,6 +148,12 @@ int	main(int ac, char **av, char **ep)
 	return (0);
 }
 
+// ls > outfile writes to the file
+// ls >> outfile appends to the file
+// cat < infile reads from the file
+// cat << EOF reads from stdin until reaches EOF
+// wc << EOF | cat >> outfile
+// ./pipex here_doc EOF <cmd1> <cmd2> <file>
 /*
 commands to test:
 unset PATH

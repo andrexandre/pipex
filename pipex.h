@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:17:18 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/19 19:53:24 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/20 17:56:29 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,15 @@ typedef struct s_vars
 	pid_t	*pids;
 }			t_vars;
 
+// pipex
+char	*search_cmd(char **cmdargs, int fd, int fd2);
+void	parsing(char **ep, int i);
+
 // pipex_utils
 void	free_all(int n);
 void	close_all(int fd1, int fd2);
 void	error_b(int n);
-void	here_doc(int ac, char **av);
+void	here_doc(int ac, char **av, char **ep);
 void	check_fds(int ac, char **av);
 
 // ft_split
@@ -57,8 +61,6 @@ char	**ft_split(char const *s, char c);
 void	*free_strs(char **strs);
 
 // get_next_line
-size_t	gnl_strlen(char *s);
-void	ft_bzero(void *s, size_t n);
 char	*get_next_line(int fd);
 
 // tool_lib

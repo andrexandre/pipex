@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/20 14:44:07 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/19 15:51:51 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/20 13:31:27 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,30 +87,30 @@ int	check_buffer(char *str)
 
 char	*get_next_line(int fd)
 {
-	static char	buffer[BUFFER_SIZE + 1];
+	static char	buffer[FOPEN_MAX][BUFFER_SIZE + 1];
 	char		*line;
 	char		*temp;
 
 	if (read(fd, 0, 0) || BUFFER_SIZE < 1)
 	{
-		ft_bzero(buffer, BUFFER_SIZE);
+		if (fd >= 0 && fd <= FOPEN_MAX)
+			ft_bzero(buffer[fd], BUFFER_SIZE);
 		return (NULL);
 	}
 	line = NULL;
-	while (*buffer != 0 || read(fd, buffer, BUFFER_SIZE))
+	while (buffer[fd][0] != 0 || read(fd, buffer[fd], BUFFER_SIZE))
 	{
 		temp = line;
-		line = ft_strjoin_gnl(temp, buffer);
+		line = ft_strjoin_gnl(temp, buffer[fd]);
 		free(temp);
-		if (check_buffer(buffer))
+		if (check_buffer(buffer[fd]))
 			break ;
 	}
 	return (line);
 }
 /*
-#include "get_next_line_utils.c"
+#include "get_next_line_utils_bonus.c"
 // cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 *.c && ./a.out
-#include <stdio.h>
 #include <fcntl.h>
 void	gnl_tester(char *file, int lcnt)
 {

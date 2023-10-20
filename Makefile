@@ -24,8 +24,8 @@ BOBJ	= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(BSRC))
 
 all:	$(NAME)
 
-$(NAME): $(OBJ) # normal
-# $(NAME): $(BOBJ) # bonus
+# $(NAME): $(OBJ) # normal
+$(NAME): $(BOBJ) # bonus
 	@cc $(CFLAGS) $^ -o $@
 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
 
@@ -35,9 +35,17 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
-bonus: $(BOBJ)
-	@cc $(CFLAGS) $^ -o $(NAME)
-	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
+# BNAME	= pipex_bonus
+
+# bonus: $(BNAME)
+
+# $(BNAME): $(BOBJ)
+# 	@cc $(CFLAGS) $^ -o $@
+# 	@echo "$(GREEN)\nBonus compiled 🛠️\n$(END)"
+
+# bonus: $(BOBJ) $(NAME)
+# 	@cc $(CFLAGS) $(BOBJ) -o $(NAME)
+# 	@echo "$(GREEN)\nBonus compiled 🛠️\n$(END)"
 
 clean:
 	@$(RM) $(OBJDIR)/*.o
