@@ -7,25 +7,24 @@ CYAN 	= \033[1;36m
 
 RM		= rm -f
 NAME	= pipex
-
 CFLAGS = -Wall -Wextra -Werror -g
 
 SRCDIR	= srcs
 OBJDIR	= objs
 
-# wildcard illegal
-# SRC		= ft_split.c  pipex_utils.c  tool_lib2.c  tool_lib3.c  tool_lib.c $(NAME).c
-SRC		= $(wildcard $(SRCDIR)/*.c) $(NAME).c
+SRC		= ft_split.c get_next_line_bonus.c pipex_utils.c tool_lib2.c tool_lib3.c tool_lib.c
+SRC		:= $(addprefix srcs/,$(SRC))
+SRC		+= pipex.c
 OBJ		= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC))
 
-# BSRC	= ft_split.c  pipex_utils.c  tool_lib2.c  tool_lib3.c  tool_lib.c $(NAME)_bonus.c
-BSRC	= $(wildcard $(SRCDIR)/*.c) $(NAME)_bonus.c
+BSRC	= ft_split.c get_next_line_bonus.c pipex_utils.c tool_lib2.c tool_lib3.c tool_lib.c
+BSRC	:= $(addprefix srcs/,$(BSRC))
+BSRC	+= pipex_bonus.c
 BOBJ	= $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(BSRC))
 
 all:	$(NAME)
 
-# $(NAME): $(OBJ) # normal
-$(NAME): $(BOBJ) # bonus
+$(NAME): $(OBJ)
 	@cc $(CFLAGS) $^ -o $@
 	@echo "$(GREEN)\nStuff compiled 🛠️\n$(END)"
 
@@ -35,17 +34,9 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
-# BNAME	= pipex_bonus
-
-# bonus: $(BNAME)
-
-# $(BNAME): $(BOBJ)
-# 	@cc $(CFLAGS) $^ -o $@
-# 	@echo "$(GREEN)\nBonus compiled 🛠️\n$(END)"
-
-# bonus: $(BOBJ) $(NAME)
-# 	@cc $(CFLAGS) $(BOBJ) -o $(NAME)
-# 	@echo "$(GREEN)\nBonus compiled 🛠️\n$(END)"
+bonus: $(BOBJ) $(NAME)
+	@cc $(CFLAGS) $(BOBJ) -o $(NAME)
+	@echo "$(GREEN)\nBonus compiled 🛠️\n$(END)"
 
 clean:
 	@$(RM) $(OBJDIR)/*.o
@@ -58,17 +49,20 @@ fclean:	clean
 
 re:	fclean all
 
+rb:	fclean bonus
+
 run: ${NAME}
 	@./${NAME}
 
 t	:= 1
 
+# TESTF	= here_doc EOF cat cat outfile
 TESTF	= infile cat wc outfile
 
 v:
 	@make && valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} ${TESTF}
 
-val:	${NAME}
+val: ${NAME}
 	@output=$$(make re && valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./${NAME} ${TESTF} 2>&1); \
 	if echo "$$output" | grep -q 'freed' && echo "$$output" | grep -q '0 errors' ; then\
 		echo -n "$(GREEN)"; echo "$$output" | grep -E 'freed|total|ERROR S|file descriptor' | sed 's/^[^ ]* //';\
@@ -78,4 +72,4 @@ val:	${NAME}
 
 e: fclean
 
-.PHONY:	all clean fclean re run test testt v val e
+.PHONY:	all clean fclean re rb run test testt v val e

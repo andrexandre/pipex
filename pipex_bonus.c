@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:16:55 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/20 19:03:31 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/21 19:24:00 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,12 +20,15 @@ char	*search_cmd(char **cmdargs, int fd, int fd2)
 	i = -1;
 	if (!ft_strchr(cmdargs[0], '/'))
 	{
-		while (vars()->paths[++i])
+		if (vars()->paths)
 		{
-			cmd = ft_strjoin(vars()->paths[i], cmdargs[0]);
-			if (!access(cmd, F_OK | X_OK))
-				return (cmd);
-			free(cmd);
+			while (vars()->paths[++i])
+			{
+				cmd = ft_strjoin(vars()->paths[i], cmdargs[0]);
+				if (!access(cmd, F_OK | X_OK))
+					return (cmd);
+				free(cmd);
+			}
 		}
 	}
 	else
@@ -122,16 +125,13 @@ void	parsing(char **ep, int i)
 	}
 }
 
-// to-do: fix leaks when:
-// make re && valgrind ./pipex here_doc EOF cat cat outfile
-// unset PATH && /bin/valgrind --track-fds=yes --trace-children=yes
-// --leak-check=full --show-leak-kinds=all -s ./pipex pipex.c pwd cat outfile
 int	main(int ac, char **av, char **ep)
 {
 	int	i;
 
 	vars()->ac = ac;
 	vars()->av = av;
+	vars()->hd = 0;
 	if (ac < 5)
 		error_b(0);
 	if (!ft_strcmp(av[1], "here_doc"))
@@ -148,19 +148,20 @@ int	main(int ac, char **av, char **ep)
 	return (0);
 }
 
-// ls > outfile writes to the file
-// ls >> outfile appends to the file
-// cat < infile reads from the file
-// cat << EOF reads from stdin until reaches EOF
-// wc << EOF | cat >> outfile
-// ./pipex here_doc EOF <cmd1> <cmd2> <file>
 /*
+cat < infile reads from the file
+< infile cat reads from the file
+ls > outfile writes to the file
+Ex: < infile cat | wc > outfile
+cat << EOF reads from stdin until reaches EOF
+ls >> outfile appends to the file
+Ex: wc << EOF | cat >> outfile
+./pipex here_doc EOF <cmd1> <cmd2> <file>
 commands to test:
 unset PATH
 export PATH=bixo
 ./pipex 123 abc comaiso tal
 ./pipex "" "" "" ""
-
 ./pipex infile "ping google.com -c 5" "wc -c" outfile
 ./pipex cat cat outfile
 ./pipex 0 cat cat outfile

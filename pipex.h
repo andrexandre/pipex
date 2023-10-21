@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:17:18 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/20 17:56:29 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/21 18:14:13 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ typedef struct s_vars
 	char	***cmdargs;
 	int		**pipe;
 	int		ac;
+	int		hd;
 	char	**av;
 	pid_t	*pids;
 }			t_vars;
@@ -78,5 +79,9 @@ char	*ft_strchr(const char *s, int c);
 // tool_lib3
 char	*ft_strdup(const char *s);
 int		ft_strcmp(char *s1, char *s2);
+
+void	free_all(int n);
+void	close_all(int fd1, int fd2);
+void	error_b(int n);
 
 #endif
