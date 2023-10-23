@@ -34,8 +34,8 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
-bonus: $(BOBJ) $(NAME)
-	@cc $(CFLAGS) $(BOBJ) -o $(NAME)
+bonus: $(BOBJ)
+	@cc $(CFLAGS) $(BOBJ) -o pipex
 	@echo "$(GREEN)\nBonus compiled 🛠️\n$(END)"
 
 clean:
