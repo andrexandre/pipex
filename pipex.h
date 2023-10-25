@@ -6,7 +6,7 @@
 /*   By: analexan <analexan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 12:17:18 by analexan          #+#    #+#             */
-/*   Updated: 2023/10/21 18:14:13 by analexan         ###   ########.fr       */
+/*   Updated: 2023/10/25 11:31:16 by analexan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,6 @@
 # include <fcntl.h>
 // va_args
 # include <stdarg.h>
-
-# ifndef BUFFER_SIZE
-#  define BUFFER_SIZE 5
-# endif
 
 # ifndef BUFFER_SIZE
 #  define BUFFER_SIZE 5
